@@ -6,6 +6,7 @@ This repo is a tiny C++ project meant to demonstrate `ccache` usage (locally and
 
 - A C++ compiler (`clang++` or `g++`)
 - `ccache` (optional, but recommended)
+ - `cmake` (>= 3.16) (optional, for the CMake build)
 
 ## Local build (with ccache, no CMake required)
 
