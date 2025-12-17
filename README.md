@@ -39,3 +39,5 @@ cmake --build build -j
 
 - `CMakeLists.txt` auto-enables `ccache` if it is found in `PATH` by setting
   `CMAKE_CXX_COMPILER_LAUNCHER`.
+
+# test
