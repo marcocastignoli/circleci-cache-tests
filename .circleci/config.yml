@@ -12,15 +12,21 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install -y --no-install-recommends \
-              build-essential ccache
+              build-essential cmake ccache
 
-      - restore_cache:
-          keys:
-            # Change this key when dependencies or compiler change.
-            - v1-ccache-{{ arch }}-{{ checksum "scripts/build.sh" }}-{{ checksum "src/main.cpp" }}-{{ checksum "src/hello.cpp" }}-{{ checksum "include/hello.hpp" }}
-            # Fallback: allow feature branches to reuse the cache produced on master.
-            - v1-ccache-{{ arch }}-master
-            - v1-ccache-{{ arch }}-
+      # On `master` we intentionally do NOT restore any cache, so every run starts from scratch.
+      - when:
+          condition:
+            not:
+              equal: ["master", << pipeline.git.branch >>]
+          steps:
+            - restore_cache:
+                keys:
+                  # Change this key when dependencies or compiler change.
+                  - v1-ccache-{{ arch }}-{{ checksum "CMakeLists.txt" }}-{{ checksum "src/main.cpp" }}-{{ checksum "src/hello.cpp" }}-{{ checksum "include/hello.hpp" }}
+                  # Fallback: allow feature branches to reuse the cache produced on master.
+                  - v1-ccache-{{ arch }}-master
+                  - v1-ccache-{{ arch }}-
 
       - run:
           name: Build (ccache)
@@ -30,18 +36,14 @@ jobs:
             export CCACHE_NOHASHDIR=1
 
             ccache -z
-            ./scripts/build.sh
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DUSE_CCACHE=ON
+            cmake --build build -j
             ccache -s
-
-      - save_cache:
-          key: v1-ccache-{{ arch }}-{{ checksum "scripts/build.sh" }}-{{ checksum "src/main.cpp" }}-{{ checksum "src/hello.cpp" }}-{{ checksum "include/hello.hpp" }}
-          paths:
-            - ~/.ccache
 
       # Also save a stable key on master so other branches can restore it even when their checksum key differs.
       - when:
           condition:
-            equal: [ "master", << pipeline.git.branch >> ]
+            equal: ["master", << pipeline.git.branch >>]
           steps:
             - save_cache:
                 key: v1-ccache-{{ arch }}-master
