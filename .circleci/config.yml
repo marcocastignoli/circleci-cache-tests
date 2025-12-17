@@ -1,0 +1,38 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+
+      - run:
+          name: Install toolchain
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends \
+              build-essential ccache
+
+      - restore_cache:
+          keys:
+            # Change this key when dependencies or compiler change.
+            - v1-ccache-{{ arch }}-{{ checksum "scripts/build.sh" }}-{{ checksum "src/main.cpp" }}-{{ checksum "src/hello.cpp" }}-{{ checksum "include/hello.hpp" }}
+            - v1-ccache-{{ arch }}-
+
+      - run:
+          name: Build (ccache)
+          command: |
+            ccache -z
+            ./scripts/build.sh
+            ccache -s
+
+      - save_cache:
+          key: v1-ccache-{{ arch }}-{{ checksum "scripts/build.sh" }}-{{ checksum "src/main.cpp" }}-{{ checksum "src/hello.cpp" }}-{{ checksum "include/hello.hpp" }}
+          paths:
+            - ~/.ccache
+
+workflows:
+  build_and_cache:
+    jobs:
+      - build
