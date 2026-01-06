@@ -22,12 +22,7 @@ jobs:
           steps:
             - restore_cache:
                 keys:
-                  # Change this key when dependencies or compiler change.
-                  - v1-ccache-{{ arch }}-{{ checksum "CMakeLists.txt" }}-{{ checksum "src/main.cpp" }}-{{ checksum "src/hello.cpp" }}-{{ checksum "include/hello.hpp" }}
-                  # Fallback: allow feature branches to reuse the *latest* cache produced on master.
-                  # This is a prefix match; CircleCI will pick the most recent cache with this prefix.
-                  - v1-ccache-{{ arch }}-master-
-                  - v1-ccache-{{ arch }}-
+                  - v1-ccache-{{ .Environment.CIRCLE_JOB }}-master-
 
       - run:
           name: Build (ccache)
@@ -47,7 +42,7 @@ jobs:
             equal: ["master", << pipeline.git.branch >>]
           steps:
             - save_cache:
-                key: v1-ccache-{{ arch }}-master-{{ .Revision }}
+                key: v1-ccache-{{ .Environment.CIRCLE_JOB }}-master-{{ .Revision }}
                 paths:
                   - ~/.ccache
 
